@@ -31,6 +31,8 @@ function exportTypeToBlobType(type: string) {
       return "image/png";
     case "JPG":
       return "image/jpeg";
+    case "JSON":
+      return "application/json";
     default:
       return "image/png";
   }
@@ -46,6 +48,8 @@ function exportTypeToFileExtension(type: string) {
       return ".png";
     case "JPG":
       return ".jpg";
+    case "JSON":
+      return ".json";
     default:
       return ".png";
   }
@@ -54,10 +58,15 @@ function exportTypeToFileExtension(type: string) {
 window.onmessage = async (event) => {
   if (!event.data.pluginMessage) return;
 
-  const { exportableBytes } = event.data.pluginMessage;
+  const { exportableBytes, exportJSON } = event.data.pluginMessage;
 
   return new Promise((resolve) => {
     let zip = new JSZip();
+
+    // Export JSON details
+    const json = JSON.stringify(exportJSON, null, 2);
+    let jsonblob = new Blob([json], { type: exportTypeToBlobType("JSON") });
+    zip.file(`interface.json`, jsonblob, { base64: true });
 
     for (let data of exportableBytes) {
       const { bytes, name, setting } = data;
