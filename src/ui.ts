@@ -60,7 +60,7 @@ window.onmessage = async (event) => {
 
   const { exportableBytes, exportJSON } = event.data.pluginMessage;
 
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     let zip = new JSZip();
 
     // Export JSON details
@@ -82,9 +82,9 @@ window.onmessage = async (event) => {
       const link = document.createElement("a");
       link.className = "button button--primary";
       link.href = blobURL;
-      link.download = "export.zip";
+      link.download = "export.fig2u";
       link.click();
-      link.setAttribute("download", name + ".zip");
+      link.setAttribute("download", name + ".fig2u");
       resolve();
     });
   }).then(() => {
