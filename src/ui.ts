@@ -14,6 +14,8 @@ import JSZip from "../node_modules/jszip/dist/jszip.min.js";
 //   parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
 // };
 
+const FIGMA_JSON_NAME = "interface";
+
 function typedArrayToBuffer(array) {
   return array.buffer.slice(
     array.byteOffset,
@@ -62,11 +64,12 @@ window.onmessage = async (event) => {
 
   return new Promise<void>((resolve) => {
     let zip = new JSZip();
+    let manifest = { figmaJson: `${FIGMA_JSON_NAME}.json`, screenImages: [] };
 
     // Export JSON details
     const json = JSON.stringify(exportJSON, null, 2);
     let jsonblob = new Blob([json], { type: exportTypeToBlobType("JSON") });
-    zip.file(`interface.json`, jsonblob, { base64: true });
+    zip.file(`${FIGMA_JSON_NAME}.json`, jsonblob, { base64: true });
 
     for (let data of exportableBytes) {
       const { bytes, name, setting } = data;
@@ -75,7 +78,17 @@ window.onmessage = async (event) => {
       const extension = exportTypeToFileExtension(setting.format);
       let blob = new Blob([cleanBytes], { type });
       zip.file(`${name}${setting.suffix}${extension}`, blob, { base64: true });
+      manifest.screenImages = [
+        ...manifest.screenImages,
+        `${name}${setting.suffix}${extension}`,
+      ];
     }
+
+    const manifestJSON = JSON.stringify(manifest, null, 2);
+    let manifestBlob = new Blob([manifestJSON], {
+      type: exportTypeToBlobType("JSON"),
+    });
+    zip.file(`manifest.json`, manifestBlob, { base64: true });
 
     zip.generateAsync({ type: "blob" }).then((content: Blob) => {
       const blobURL = window.URL.createObjectURL(content);
