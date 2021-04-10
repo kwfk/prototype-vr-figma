@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import "./ui.css";
 import JSZip from "../node_modules/jszip/dist/jszip.min.js";
 
 declare function require(path: string): any;
@@ -107,9 +108,13 @@ const App: React.FC = () => {
   };
 
   return (
-    <div>
-      <div>This is what will be exported</div>
-      <button onClick={handleExport}>Export</button>
+    <div id="app">
+      <div id="content">This is what will be exported</div>
+      <footer>
+        <button id="create" onClick={handleExport}>
+          Export
+        </button>
+      </footer>
     </div>
   );
 };
