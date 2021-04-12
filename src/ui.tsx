@@ -53,7 +53,12 @@ const App: React.FC = () => {
   window.onmessage = async (event) => {
     if (!event.data.pluginMessage) return;
 
-    const { exportableBytes, exportJSON } = event.data.pluginMessage;
+    const {
+      exportableBytes,
+      exportJSON,
+      projectName,
+      pageName,
+    } = event.data.pluginMessage;
 
     return new Promise<void>((resolve) => {
       let zip = new JSZip();
@@ -90,7 +95,7 @@ const App: React.FC = () => {
         const link = document.createElement("a");
         link.className = "button button--primary";
         link.href = blobURL;
-        link.download = "export.fig2u";
+        link.download = `${projectName}.fig2u`;
         link.click();
         link.setAttribute("download", name + ".fig2u");
         resolve();

@@ -123,7 +123,12 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
     frames: frameDetails,
   };
 
-  figma.ui.postMessage({ exportableBytes, exportJSON });
+  figma.ui.postMessage({
+    exportableBytes,
+    exportJSON,
+    projectName: figma.root.name,
+    pageName: figma.currentPage.name,
+  });
 
   return new Promise((resolve) => {
     figma.ui.onmessage = ({ type }) => {
