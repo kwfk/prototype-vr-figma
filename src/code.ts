@@ -76,6 +76,7 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
     // let defaultSetting = setting;
     const bytes = await node.exportAsync(setting);
     exportableBytes.push({
+      id,
       name,
       setting,
       bytes,
@@ -89,7 +90,7 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
   };
 
   figma.showUI(__html__);
-  figma.ui.resize(456, 328);
+  figma.ui.resize(472, 328);
   figma.ui.postMessage({
     exportableBytes,
     exportJSON,

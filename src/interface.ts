@@ -1,4 +1,5 @@
 export interface ExportableBytes {
+  id: string;
   name: string;
   setting: ExportSettingsImage | ExportSettingsPDF | ExportSettingsSVG;
   bytes: Uint8Array;

@@ -138,18 +138,19 @@ const App: React.FC = () => {
   return (
     <div id="app">
       <div id="content">
-        {/* This is what will be exported
-        <div>{projectName}</div> */}
         {exportableBytes.map((data) => {
-          const { bytes, name, setting } = data;
+          const { id, bytes, name, setting } = data;
           const blob = blobify(bytes, setting.format);
           const objURL = URL.createObjectURL(blob);
           return (
-            <div className="thumb" key={name}>
-              <div
-                className="thumb-img"
-                style={{ backgroundImage: `url(${objURL})` }}
-              />
+            <div className="preview-container" key={id}>
+              <div className="preview">
+                <div
+                  className="preview-img"
+                  style={{ backgroundImage: `url(${objURL})` }}
+                />
+              </div>
+              <div>{name}</div>
             </div>
           );
         })}
