@@ -1,43 +1,10 @@
+import { ExportableBytes, Hotspot, Frame, ExportJSON } from "./interface";
+
 const { children, prototypeStartNode: startingFrame } = figma.currentPage;
 
 function hasValidSelection(nodes) {
   return !(!nodes || nodes.length === 0);
 }
-
-export interface ExportableBytes {
-  name: string;
-  setting: ExportSettingsImage | ExportSettingsPDF | ExportSettingsSVG;
-  bytes: Uint8Array;
-}
-
-type Hotspot = {
-  name: string;
-  id: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  visible: boolean;
-  action: {
-    type: string;
-    destinationId?: string | null;
-    transition?: Transition;
-    trigger: Trigger;
-  }[];
-};
-
-type Frame = {
-  id: string;
-  name: string;
-  width: number;
-  height: number;
-  hotspots: Hotspot[];
-};
-
-type ExportJSON = {
-  startingFrame: string;
-  frames: Frame[];
-};
 
 function findReactionNodes(node: BaseNode): Hotspot[] {
   let ret: Hotspot[] = [];
@@ -123,6 +90,7 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
     frames: frameDetails,
   };
 
+  figma.showUI(__html__);
   figma.ui.postMessage({
     exportableBytes,
     exportJSON,
@@ -132,15 +100,9 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
 
   return new Promise((resolve) => {
     figma.ui.onmessage = ({ type }) => {
-      if (type === "zip-success") resolve("Complete");
+      if (type === "zip-success") resolve("Exported!");
     };
   });
 }
 
-figma.showUI(__html__);
-
-figma.ui.onmessage = ({ type }) => {
-  if (type === "start-export") {
-    main(children).then((res) => figma.closePlugin(res));
-  }
-};
+main(children).then((res) => figma.closePlugin(res));

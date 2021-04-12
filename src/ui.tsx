@@ -2,11 +2,18 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import "./ui.css";
 import JSZip from "../node_modules/jszip/dist/jszip.min.js";
+import { ExportableBytes, ExportJSON } from "./interface";
 
 declare function require(path: string): any;
 const FIGMA_JSON_NAME = "interface";
 
 const App: React.FC = () => {
+  const [exportableBytes, setExportableBytes] = React.useState<
+    ExportableBytes[]
+  >();
+  const [exportJSON, setExportJSON] = React.useState<ExportJSON>();
+  const [projectName, setProjectName] = React.useState("");
+  const [pageName, setPageName] = React.useState("");
   textbox: HTMLInputElement;
 
   const typedArrayToBuffer = (array) => {
@@ -50,7 +57,7 @@ const App: React.FC = () => {
     }
   };
 
-  window.onmessage = async (event) => {
+  window.onmessage = (event) => {
     if (!event.data.pluginMessage) return;
 
     const {
@@ -60,15 +67,20 @@ const App: React.FC = () => {
       pageName,
     } = event.data.pluginMessage;
 
+    setExportableBytes(exportableBytes);
+    setExportJSON(exportJSON);
+    setProjectName(projectName);
+    setPageName(pageName);
+  };
+
+  const handleExport = async () => {
     return new Promise<void>((resolve) => {
       let zip = new JSZip();
       let manifest = { figmaJson: `${FIGMA_JSON_NAME}.json`, screenImages: [] };
-
       // Export JSON details
       const json = JSON.stringify(exportJSON, null, 2);
       let jsonblob = new Blob([json], { type: exportTypeToBlobType("JSON") });
       zip.file(`${FIGMA_JSON_NAME}.json`, jsonblob, { base64: true });
-
       for (let data of exportableBytes) {
         const { bytes, name, setting } = data;
         const cleanBytes = typedArrayToBuffer(bytes);
@@ -83,13 +95,11 @@ const App: React.FC = () => {
           `${name}${setting.suffix}${extension}`,
         ];
       }
-
       const manifestJSON = JSON.stringify(manifest, null, 2);
       let manifestBlob = new Blob([manifestJSON], {
         type: exportTypeToBlobType("JSON"),
       });
       zip.file(`manifest.json`, manifestBlob, { base64: true });
-
       zip.generateAsync({ type: "blob" }).then((content: Blob) => {
         const blobURL = window.URL.createObjectURL(content);
         const link = document.createElement("a");
@@ -97,7 +107,7 @@ const App: React.FC = () => {
         link.href = blobURL;
         link.download = `${projectName}.fig2u`;
         link.click();
-        link.setAttribute("download", name + ".fig2u");
+        link.setAttribute("download", "download");
         resolve();
       });
     }).then(() => {
@@ -108,13 +118,12 @@ const App: React.FC = () => {
     });
   };
 
-  const handleExport = () => {
-    parent.postMessage({ pluginMessage: { type: "start-export" } }, "*");
-  };
-
   return (
     <div id="app">
-      <div id="content">This is what will be exported</div>
+      <div id="content">
+        This is what will be exported
+        <div>{projectName}</div>
+      </div>
       <footer>
         <button id="create" onClick={handleExport}>
           Export
