@@ -10,7 +10,7 @@ const FIGMA_JSON_NAME = "interface";
 const App: React.FC = () => {
   const [exportableBytes, setExportableBytes] = React.useState<
     ExportableBytes[]
-  >();
+  >([]);
   const [exportJSON, setExportJSON] = React.useState<ExportJSON>();
   const [projectName, setProjectName] = React.useState("");
   const [pageName, setPageName] = React.useState("");
@@ -73,20 +73,33 @@ const App: React.FC = () => {
     setPageName(pageName);
   };
 
+  const blobify = (
+    bytes: Uint8Array,
+    format: "JPG" | "PNG" | "PDF" | "SVG"
+  ) => {
+    const cleanBytes = typedArrayToBuffer(bytes);
+    const type = exportTypeToBlobType(format);
+    const blob = new Blob([cleanBytes], { type });
+    return blob;
+  };
+
   const handleExport = async () => {
     return new Promise<void>((resolve) => {
       let zip = new JSZip();
       let manifest = { figmaJson: `${FIGMA_JSON_NAME}.json`, screenImages: [] };
+
       // Export JSON details
       const json = JSON.stringify(exportJSON, null, 2);
       let jsonblob = new Blob([json], { type: exportTypeToBlobType("JSON") });
       zip.file(`${FIGMA_JSON_NAME}.json`, jsonblob, { base64: true });
+
+      // Export frame images
       for (let data of exportableBytes) {
         const { bytes, name, setting } = data;
-        const cleanBytes = typedArrayToBuffer(bytes);
-        const type = exportTypeToBlobType(setting.format);
+
+        const blob = blobify(bytes, setting.format);
+
         const extension = exportTypeToFileExtension(setting.format);
-        let blob = new Blob([cleanBytes], { type });
         zip.file(`${name}${setting.suffix}${extension}`, blob, {
           base64: true,
         });
@@ -95,11 +108,15 @@ const App: React.FC = () => {
           `${name}${setting.suffix}${extension}`,
         ];
       }
+
+      // Export manifest JSON
       const manifestJSON = JSON.stringify(manifest, null, 2);
       let manifestBlob = new Blob([manifestJSON], {
         type: exportTypeToBlobType("JSON"),
       });
       zip.file(`manifest.json`, manifestBlob, { base64: true });
+
+      // Zip files
       zip.generateAsync({ type: "blob" }).then((content: Blob) => {
         const blobURL = window.URL.createObjectURL(content);
         const link = document.createElement("a");
@@ -121,8 +138,21 @@ const App: React.FC = () => {
   return (
     <div id="app">
       <div id="content">
-        This is what will be exported
-        <div>{projectName}</div>
+        {/* This is what will be exported
+        <div>{projectName}</div> */}
+        {exportableBytes.map((data) => {
+          const { bytes, name, setting } = data;
+          const blob = blobify(bytes, setting.format);
+          const objURL = URL.createObjectURL(blob);
+          return (
+            <div className="thumb" key={name}>
+              <div
+                className="thumb-img"
+                style={{ backgroundImage: `url(${objURL})` }}
+              />
+            </div>
+          );
+        })}
       </div>
       <footer>
         <button id="create" onClick={handleExport}>

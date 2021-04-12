@@ -21,6 +21,26 @@ body {
   align-content: flex-start;
 }
 
+.thumb {
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  position: relative;
+  margin: 4px;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.thumb-img {
+  width: 84px;
+  height: 84px;
+  margin: 8px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
 footer {
   height: 48px;
   padding: 8px;

@@ -63,26 +63,24 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
     });
 
     // Should we force to use PNG or use the export setting?
-    if (exportSettings.length === 0) {
-      exportSettings = [
-        {
-          format: "PNG",
-          suffix: "",
-          constraint: { type: "SCALE", value: 1 },
-          contentsOnly: true,
-        },
-      ];
-    }
+    // if (exportSettings.length === 0) {
+    const setting: ExportSettings = {
+      format: "PNG",
+      suffix: "",
+      constraint: { type: "SCALE", value: 1 },
+      contentsOnly: true,
+    };
+    // }
 
-    for (let setting of exportSettings) {
-      let defaultSetting = setting;
-      const bytes = await node.exportAsync(defaultSetting);
-      exportableBytes.push({
-        name,
-        setting,
-        bytes,
-      });
-    }
+    // for (let setting of exportSettings) {
+    // let defaultSetting = setting;
+    const bytes = await node.exportAsync(setting);
+    exportableBytes.push({
+      name,
+      setting,
+      bytes,
+    });
+    // }
   }
 
   const exportJSON: ExportJSON = {
@@ -91,6 +89,7 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
   };
 
   figma.showUI(__html__);
+  figma.ui.resize(456, 328);
   figma.ui.postMessage({
     exportableBytes,
     exportJSON,
