@@ -2,7 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import "./ui.css";
 import JSZip from "../node_modules/jszip/dist/jszip.min.js";
-import { ExportableBytes, ExportJSON } from "./interface";
+import { ExportableBytes, ExportJSON, ErrorNode } from "./interface";
 
 declare function require(path: string): any;
 const FIGMA_JSON_NAME = "interface";
@@ -12,8 +12,12 @@ const App: React.FC = () => {
     ExportableBytes[]
   >([]);
   const [exportJSON, setExportJSON] = React.useState<ExportJSON>();
+  const [errorNodes, setErrorNodes] = React.useState<ErrorNode[]>([]);
   const [projectName, setProjectName] = React.useState("");
   const [pageName, setPageName] = React.useState("");
+  const [selectedNode, setSelectedNode] = React.useState(-1);
+
+  const [selectedFrames, setSelectedFrames] = React.useState<string[]>([]);
   textbox: HTMLInputElement;
 
   const typedArrayToBuffer = (array) => {
@@ -63,12 +67,16 @@ const App: React.FC = () => {
     const {
       exportableBytes,
       exportJSON,
+      errorNodes,
       projectName,
       pageName,
     } = event.data.pluginMessage;
 
+    console.log(errorNodes);
+
     setExportableBytes(exportableBytes);
     setExportJSON(exportJSON);
+    setErrorNodes(errorNodes);
     setProjectName(projectName);
     setPageName(pageName);
   };
@@ -138,22 +146,45 @@ const App: React.FC = () => {
   return (
     <div id="app">
       <div id="content">
-        {exportableBytes.map((data) => {
+        {errorNodes.map(({ id, name, trigger }, index) => (
+          <div
+            className={`item-container ${
+              index === selectedNode ? "item-container-selected" : null
+            }`}
+            key={`${id}-${trigger}`}
+          >
+            <div
+              className="item"
+              onClick={() => {
+                setSelectedNode(index);
+                window.parent.postMessage(
+                  { pluginMessage: { type: "error-click", id } },
+                  "*"
+                );
+              }}
+            >
+              <div>UNSUPPORTED ACTION: SMART ANIMATE</div>
+              <div className="item-description">{`- Node: ${name}`}</div>
+              <div className="item-description">{`- Trigger: ${trigger}`}</div>
+            </div>
+          </div>
+        ))}
+        {/* {exportableBytes.map((data) => {
           const { id, bytes, name, setting } = data;
           const blob = blobify(bytes, setting.format);
           const objURL = URL.createObjectURL(blob);
           return (
             <div className="preview-container" key={id}>
-              <div className="preview">
+              <div className={`preview`}>
                 <div
                   className="preview-img"
                   style={{ backgroundImage: `url(${objURL})` }}
                 />
               </div>
-              <div>{name}</div>
+              <div className="preview-text">{name}</div>
             </div>
           );
-        })}
+        })} */}
       </div>
       <footer>
         <button id="create" onClick={handleExport}>

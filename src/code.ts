@@ -1,10 +1,19 @@
-import { ExportableBytes, Hotspot, Frame, ExportJSON } from "./interface";
+import {
+  ExportableBytes,
+  Hotspot,
+  Frame,
+  ExportJSON,
+  ErrorNode,
+} from "./interface";
 
 const { children, prototypeStartNode: startingFrame } = figma.currentPage;
 
 function hasValidSelection(nodes) {
   return !(!nodes || nodes.length === 0);
 }
+
+let errorNodes: ErrorNode[] = [];
+let usedNames = new Set();
 
 function findReactionNodes(node: BaseNode): Hotspot[] {
   let ret: Hotspot[] = [];
@@ -20,6 +29,15 @@ function findReactionNodes(node: BaseNode): Hotspot[] {
         visible: node.opacity !== 0,
         action: node.reactions.map((react) => {
           if (react.action.type === "NODE") {
+            if (react.action.transition?.type === "SMART_ANIMATE") {
+              const { id, name } = node;
+              errorNodes.push({
+                id,
+                name,
+                trigger: react.trigger.type,
+                error: "UNSUPPORTED ACTION: SMART_ANIMATE",
+              });
+            }
             return {
               type: react.action.type,
               destinationId: react.action.destinationId,
@@ -94,13 +112,21 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
   figma.ui.postMessage({
     exportableBytes,
     exportJSON,
+    errorNodes: errorNodes,
     projectName: figma.root.name,
     pageName: figma.currentPage.name,
   });
 
   return new Promise((resolve) => {
-    figma.ui.onmessage = ({ type }) => {
+    figma.ui.onmessage = (msg) => {
+      const { type } = msg;
       if (type === "zip-success") resolve("Exported!");
+      if (type === "error-click") {
+        const errorNode = figma.getNodeById(msg.id);
+        if (errorNode.type !== "DOCUMENT" && errorNode.type !== "PAGE")
+          figma.currentPage.selection = [errorNode];
+        figma.viewport.scrollAndZoomIntoView([errorNode]);
+      }
     };
   });
 }

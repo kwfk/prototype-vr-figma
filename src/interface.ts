@@ -33,3 +33,10 @@ export type ExportJSON = {
   startingFrame: string;
   frames: Frame[];
 };
+
+export type ErrorNode = {
+  id: string;
+  name: string;
+  trigger: string;
+  error: "UNSUPPORTED ACTION: SMART_ANIMATE" | "DUPLICATE HOTSPOT";
+};
