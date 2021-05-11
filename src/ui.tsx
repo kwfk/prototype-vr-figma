@@ -3,6 +3,7 @@ import * as ReactDOM from "react-dom";
 import "./ui.css";
 import JSZip from "../node_modules/jszip/dist/jszip.min.js";
 import { ExportableBytes, ExportJSON, ErrorNode } from "./interface";
+import { getFrameName } from "./getFrameName";
 
 declare function require(path: string): any;
 const FIGMA_JSON_NAME = "interface";
@@ -16,9 +17,6 @@ const App: React.FC = () => {
   const [projectName, setProjectName] = React.useState("");
   const [pageName, setPageName] = React.useState("");
   const [selectedNode, setSelectedNode] = React.useState("");
-
-  const [selectedFrames, setSelectedFrames] = React.useState<string[]>([]);
-  textbox: HTMLInputElement;
 
   const typedArrayToBuffer = (array) => {
     return array.buffer.slice(
@@ -72,8 +70,6 @@ const App: React.FC = () => {
       pageName,
     } = event.data.pluginMessage;
 
-    console.log(errorNodes);
-
     setExportableBytes(exportableBytes);
     setExportJSON(exportJSON);
     setErrorNodes(errorNodes);
@@ -108,7 +104,9 @@ const App: React.FC = () => {
         const blob = blobify(bytes, setting.format);
 
         const extension = exportTypeToFileExtension(setting.format);
-        const filename = `${name}-${id}${setting.suffix}${extension}`;
+        const filename = `${getFrameName(name, id)}${
+          setting.suffix
+        }${extension}`;
         zip.file(filename, blob, {
           base64: true,
         });
@@ -144,20 +142,19 @@ const App: React.FC = () => {
   return (
     <div id="app">
       <div id="content">
-        <h3 className={`item header`}>Warnings</h3>
-        {errorNodes.map((error, index) => {
-          if (error.type === "UNSUPPORTED ACTION: SMART_ANIMATE") {
-            const { id, trigger } = error;
-            return (
-              <div
-                className={`item-container ${
-                  index.toString() === selectedNode
-                    ? "item-container-selected"
-                    : null
-                }`}
-                key={index}
-              >
+        <h3 className="section item header">Warnings</h3>
+        <div className="section">
+          {errorNodes.map((error, index) => {
+            if (error.type === "UNSUPPORTED ACTION: SMART_ANIMATE") {
+              const { id, trigger } = error;
+              return (
                 <div
+                  key={index}
+                  className={`item-container ${
+                    index.toString() === selectedNode
+                      ? "item-container-selected"
+                      : ""
+                  }`}
                   onClick={() => {
                     setSelectedNode(index.toString());
                     window.parent.postMessage(
@@ -180,20 +177,18 @@ const App: React.FC = () => {
                     <div>{`Trigger: ${trigger}`}</div>
                   </div>
                 </div>
-              </div>
-            );
-          } else if (error.type === "DUPLICATE_HOTSPOT") {
-            const { ids } = error;
-            return (
-              <div
-                className={`item-container ${
-                  index.toString() === selectedNode
-                    ? "item-container-selected"
-                    : null
-                }`}
-                key={index}
-              >
-                <div>
+              );
+            } else if (error.type === "DUPLICATE_HOTSPOT") {
+              const { ids } = error;
+              return (
+                <div
+                  className={`item-container ${
+                    index.toString() === selectedNode
+                      ? "item-container-selected"
+                      : ""
+                  }`}
+                  key={index}
+                >
                   <div
                     className={`item item-title ${
                       index.toString() === selectedNode
@@ -232,11 +227,11 @@ const App: React.FC = () => {
                     </div>
                   ))}
                 </div>
-              </div>
-            );
-          }
-        })}
-        <h3 className="item header">Export Preview</h3>
+              );
+            }
+          })}
+        </div>
+        <h3 className="section item header">Export Preview</h3>
         <div className="item preview-section">
           {exportableBytes.map((data, index) => {
             const { id, bytes, name, setting } = data;
@@ -258,7 +253,7 @@ const App: React.FC = () => {
                   className={`preview ${
                     `preview:${index}` === selectedNode
                       ? "preview-selected"
-                      : null
+                      : ""
                   }`}
                 >
                   <div
@@ -270,10 +265,10 @@ const App: React.FC = () => {
                   className={`preview-text ${
                     `preview:${index}` === selectedNode
                       ? "preview-text-selected"
-                      : null
+                      : ""
                   }`}
                 >
-                  {name}
+                  {getFrameName(name, id)}
                 </div>
               </div>
             );

@@ -1,3 +1,4 @@
+import { getFrameName } from "./getFrameName";
 import {
   ExportableBytes,
   Hotspot,
@@ -98,7 +99,7 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
     let usedNames: Record<string, { id: string; index: number }> = {};
     frameDetails.push({
       id,
-      name,
+      name: getFrameName(name, id),
       width,
       height,
       hotspots: findReactionNodes(node, usedNames),
