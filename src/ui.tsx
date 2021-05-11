@@ -146,29 +146,78 @@ const App: React.FC = () => {
   return (
     <div id="app">
       <div id="content">
-        {errorNodes.map(({ id, name, trigger }, index) => (
-          <div
-            className={`item-container ${
-              index === selectedNode ? "item-container-selected" : null
-            }`}
-            key={`${id}-${trigger}`}
-          >
-            <div
-              className="item"
-              onClick={() => {
-                setSelectedNode(index);
-                window.parent.postMessage(
-                  { pluginMessage: { type: "error-click", id } },
-                  "*"
-                );
-              }}
-            >
-              <div>UNSUPPORTED ACTION: SMART ANIMATE</div>
-              <div className="item-description">{`- Node: ${name}`}</div>
-              <div className="item-description">{`- Trigger: ${trigger}`}</div>
-            </div>
-          </div>
-        ))}
+        {errorNodes.map((error, index) => {
+          if (error.type === "UNSUPPORTED ACTION: SMART_ANIMATE") {
+            const { id, trigger } = error;
+            return (
+              <div
+                className={`item-container ${
+                  index === selectedNode ? "item-container-selected" : null
+                }`}
+                key={index}
+              >
+                <div
+                  onClick={() => {
+                    setSelectedNode(index);
+                    window.parent.postMessage(
+                      { pluginMessage: { type: "error-click", ids: [id] } },
+                      "*"
+                    );
+                  }}
+                >
+                  <div
+                    className={`item item-title ${
+                      index === selectedNode
+                        ? "item-title-selected"
+                        : "item-title-hover"
+                    }`}
+                  >
+                    {error.type}
+                  </div>
+                  <div className="item item-details">
+                    <div>{`Node: ${error.name}`}</div>
+                    <div>{`Trigger: ${trigger}`}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          } else if (error.type === "DUPLICATE_HOTSPOT") {
+            const { ids } = error;
+            return (
+              <div
+                className={`item-container ${
+                  index === selectedNode ? "item-container-selected" : null
+                }`}
+                key={index}
+              >
+                <div
+                  onClick={() => {
+                    setSelectedNode(index);
+                    window.parent.postMessage(
+                      { pluginMessage: { type: "error-click", ids } },
+                      "*"
+                    );
+                  }}
+                >
+                  <div
+                    className={`item item-title ${
+                      index === selectedNode
+                        ? "item-title-selected"
+                        : "item-title-hover"
+                    }`}
+                  >
+                    {error.type}: {error.name}
+                  </div>
+                  {ids.map((id) => (
+                    <div key={id} className="item item-details">
+                      {id}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+        })}
         {/* {exportableBytes.map((data) => {
           const { id, bytes, name, setting } = data;
           const blob = blobify(bytes, setting.format);

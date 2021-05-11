@@ -34,9 +34,24 @@ export type ExportJSON = {
   frames: Frame[];
 };
 
-export type ErrorNode = {
+export type ErrorType =
+  | {
+      type: "UNSUPPORTED ACTION: SMART_ANIMATE";
+      trigger: string;
+    }
+  | { type: "DUPLICATE_HOTSPOT" };
+
+export type UnsupportedActionError = {
+  type: "UNSUPPORTED ACTION: SMART_ANIMATE";
   id: string;
   name: string;
   trigger: string;
-  error: "UNSUPPORTED ACTION: SMART_ANIMATE" | "DUPLICATE HOTSPOT";
 };
+
+export type DuplicateHotspotError = {
+  type: "DUPLICATE_HOTSPOT";
+  name: string;
+  ids: string[];
+};
+
+export type ErrorNode = UnsupportedActionError | DuplicateHotspotError;

@@ -13,29 +13,52 @@ function hasValidSelection(nodes) {
 }
 
 let errorNodes: ErrorNode[] = [];
-let usedNames = new Set();
 
-function findReactionNodes(node: BaseNode): Hotspot[] {
+function findReactionNodes(
+  node: BaseNode,
+  usedNames: Record<string, { id: string; index: number }>
+): Hotspot[] {
   let ret: Hotspot[] = [];
   if ("reactions" in node && node.reactions.length > 0) {
+    const { id, name, x, y, width, height, opacity, reactions } = node;
+    if (usedNames[name] !== undefined) {
+      const { id: initialId, index } = usedNames[name];
+      if (index == -1) {
+        const len = errorNodes.push({
+          type: "DUPLICATE_HOTSPOT",
+          name,
+          ids: [initialId, id],
+        });
+        usedNames[name].index = len - 1;
+      } else {
+        const error = errorNodes[usedNames[name].index];
+        if (error.type === "DUPLICATE_HOTSPOT") error.ids.push(id);
+      }
+    } else {
+      usedNames[name] = {
+        id,
+        index: -1,
+      };
+    }
+
     ret = [
       {
-        name: node.name,
-        id: node.id,
-        x: node.x,
-        y: node.y,
-        w: node.width,
-        h: node.height,
-        visible: node.opacity !== 0,
-        action: node.reactions.map((react) => {
+        name,
+        id,
+        x,
+        y,
+        w: width,
+        h: height,
+        visible: opacity !== 0,
+        action: reactions.map((react) => {
           if (react.action.type === "NODE") {
             if (react.action.transition?.type === "SMART_ANIMATE") {
               const { id, name } = node;
               errorNodes.push({
+                type: "UNSUPPORTED ACTION: SMART_ANIMATE",
                 id,
                 name,
                 trigger: react.trigger.type,
-                error: "UNSUPPORTED ACTION: SMART_ANIMATE",
               });
             }
             return {
@@ -56,7 +79,7 @@ function findReactionNodes(node: BaseNode): Hotspot[] {
   if ("children" in node) {
     if (node.type !== "INSTANCE") {
       for (const child of node.children) {
-        ret = [...ret, ...findReactionNodes(child)];
+        ret = [...ret, ...findReactionNodes(child, usedNames)];
       }
     }
   }
@@ -72,12 +95,13 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
   for (let node of nodes) {
     let { id, name, width, height, exportSettings } = node;
 
+    let usedNames: Record<string, { id: string; index: number }> = {};
     frameDetails.push({
       id,
       name,
       width,
       height,
-      hotspots: findReactionNodes(node),
+      hotspots: findReactionNodes(node, usedNames),
     });
 
     // Should we force to use PNG or use the export setting?
@@ -108,7 +132,7 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
   };
 
   figma.showUI(__html__);
-  figma.ui.resize(472, 328);
+  figma.ui.resize(328, 328);
   figma.ui.postMessage({
     exportableBytes,
     exportJSON,
@@ -122,10 +146,15 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
       const { type } = msg;
       if (type === "zip-success") resolve("Exported!");
       if (type === "error-click") {
-        const errorNode = figma.getNodeById(msg.id);
-        if (errorNode.type !== "DOCUMENT" && errorNode.type !== "PAGE")
-          figma.currentPage.selection = [errorNode];
-        figma.viewport.scrollAndZoomIntoView([errorNode]);
+        const ids: string[] = msg.ids;
+        const errorNodes = ids.map((id, index) => {
+          const node = figma.getNodeById(id);
+          if (node.type !== "DOCUMENT" && node.type !== "PAGE") {
+            return node;
+          }
+        });
+        figma.currentPage.selection = errorNodes;
+        figma.viewport.scrollAndZoomIntoView(errorNodes);
       }
     };
   });
