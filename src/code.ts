@@ -17,27 +17,35 @@ let errorNodes: ErrorNode[] = [];
 
 function findReactionNodes(
   node: BaseNode,
-  usedNames: Record<string, { id: string; index: number }>
+  usedNames: Record<string, { id: string; index: number; pathname: string }>,
+  pathname: string
 ): Hotspot[] {
   let ret: Hotspot[] = [];
+  const { name } = node;
+  const currPathname = pathname ? `${pathname} > ${name}` : name;
   if ("reactions" in node && node.reactions.length > 0) {
-    const { id, name, x, y, width, height, opacity, reactions } = node;
+    const { id, x, y, width, height, opacity, reactions } = node;
     if (usedNames[name] !== undefined) {
-      const { id: initialId, index } = usedNames[name];
+      const { id: initialId, pathname: initialPath, index } = usedNames[name];
       if (index == -1) {
         const len = errorNodes.push({
           type: "DUPLICATE_HOTSPOT",
           name,
-          ids: [initialId, id],
+          duplicates: [
+            { id: initialId, pathname: initialPath },
+            { id, pathname: currPathname },
+          ],
         });
         usedNames[name].index = len - 1;
       } else {
         const error = errorNodes[usedNames[name].index];
-        if (error.type === "DUPLICATE_HOTSPOT") error.ids.push(id);
+        if (error.type === "DUPLICATE_HOTSPOT")
+          error.duplicates.push({ id, pathname: currPathname });
       }
     } else {
       usedNames[name] = {
         id,
+        pathname: currPathname,
         index: -1,
       };
     }
@@ -59,6 +67,7 @@ function findReactionNodes(
                 type: "UNSUPPORTED ACTION: SMART_ANIMATE",
                 id,
                 name,
+                pathname: currPathname,
                 trigger: react.trigger.type,
               });
             }
@@ -80,7 +89,7 @@ function findReactionNodes(
   if ("children" in node) {
     if (node.type !== "INSTANCE") {
       for (const child of node.children) {
-        ret = [...ret, ...findReactionNodes(child, usedNames)];
+        ret = [...ret, ...findReactionNodes(child, usedNames, currPathname)];
       }
     }
   }
@@ -96,13 +105,16 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
   for (let node of nodes) {
     let { id, name, width, height, exportSettings } = node;
 
-    let usedNames: Record<string, { id: string; index: number }> = {};
+    let usedNames: Record<
+      string,
+      { id: string; index: number; pathname: string }
+    > = {};
     frameDetails.push({
       id,
       name: getFrameName(name, id),
       width,
       height,
-      hotspots: findReactionNodes(node, usedNames),
+      hotspots: findReactionNodes(node, usedNames, ""),
     });
 
     // Should we force to use PNG or use the export setting?
@@ -128,7 +140,7 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
   }
 
   const exportJSON: ExportJSON = {
-    startingFrame: startingFrame.name,
+    startingFrame: startingFrame?.name,
     frames: frameDetails,
   };
 

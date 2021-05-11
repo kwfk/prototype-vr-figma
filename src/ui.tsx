@@ -142,79 +142,23 @@ const App: React.FC = () => {
   return (
     <div id="app">
       <div id="content">
-        <h3 className="section item header">Warnings</h3>
-        <div className="section">
-          {errorNodes.map((error, index) => {
-            if (error.type === "UNSUPPORTED ACTION: SMART_ANIMATE") {
-              const { id, trigger } = error;
-              return (
-                <div
-                  key={index}
-                  className={`item-container ${
-                    index.toString() === selectedNode
-                      ? "item-container-selected"
-                      : ""
-                  }`}
-                  onClick={() => {
-                    setSelectedNode(index.toString());
-                    window.parent.postMessage(
-                      { pluginMessage: { type: "select-click", ids: [id] } },
-                      "*"
-                    );
-                  }}
-                >
-                  <div
-                    className={`item item-title ${
-                      index.toString() === selectedNode
-                        ? "item-title-selected"
-                        : "item-title-hover"
-                    }`}
-                  >
-                    {error.type}
-                  </div>
-                  <div className="item item-details">
-                    <div>{`Node: ${error.name}`}</div>
-                    <div>{`Trigger: ${trigger}`}</div>
-                  </div>
-                </div>
-              );
-            } else if (error.type === "DUPLICATE_HOTSPOT") {
-              const { ids } = error;
-              return (
-                <div
-                  className={`item-container ${
-                    index.toString() === selectedNode
-                      ? "item-container-selected"
-                      : ""
-                  }`}
-                  key={index}
-                >
-                  <div
-                    className={`item item-title ${
-                      index.toString() === selectedNode
-                        ? "item-title-selected"
-                        : "item-title-hover"
-                    }`}
-                    onClick={() => {
-                      setSelectedNode(index.toString());
-                      window.parent.postMessage(
-                        { pluginMessage: { type: "select-click", ids } },
-                        "*"
-                      );
-                    }}
-                  >
-                    {error.type}: {error.name}
-                  </div>
-                  {ids.map((id, idIndex) => (
+        {errorNodes.length > 0 ? (
+          <>
+            <h3 className="section item header">Warnings</h3>
+            <div className="section">
+              {errorNodes.map((error, index) => {
+                if (error.type === "UNSUPPORTED ACTION: SMART_ANIMATE") {
+                  const { id, trigger, pathname } = error;
+                  return (
                     <div
-                      key={id}
-                      className={`item item-details item-details-clickable ${
-                        `${index}:${idIndex}` === selectedNode
-                          ? "item-details-selected"
-                          : "item-details-hover"
+                      key={index}
+                      className={`item-container ${
+                        index.toString() === selectedNode
+                          ? "item-container-selected"
+                          : ""
                       }`}
                       onClick={() => {
-                        setSelectedNode(`${index}:${idIndex}`);
+                        setSelectedNode(index.toString());
                         window.parent.postMessage(
                           {
                             pluginMessage: { type: "select-click", ids: [id] },
@@ -223,14 +167,91 @@ const App: React.FC = () => {
                         );
                       }}
                     >
-                      {id}
+                      <div
+                        className={`item item-title ${
+                          index.toString() === selectedNode
+                            ? "item-title-selected"
+                            : "item-title-hover"
+                        }`}
+                      >
+                        {error.type}
+                      </div>
+                      <div className="item item-details">
+                        <div>
+                          <span className="item-detail-label">Node</span>
+                          {error.pathname}
+                        </div>
+                        <div>
+                          <span className="item-detail-label">Trigger</span>
+                          {trigger}
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              );
-            }
-          })}
-        </div>
+                  );
+                } else if (error.type === "DUPLICATE_HOTSPOT") {
+                  const { duplicates } = error;
+                  return (
+                    <div
+                      className={`item-container ${
+                        index.toString() === selectedNode
+                          ? "item-container-selected"
+                          : ""
+                      }`}
+                      key={index}
+                    >
+                      <div
+                        className={`item item-title ${
+                          index.toString() === selectedNode
+                            ? "item-title-selected"
+                            : "item-title-hover"
+                        }`}
+                        onClick={() => {
+                          setSelectedNode(index.toString());
+                          window.parent.postMessage(
+                            {
+                              pluginMessage: {
+                                type: "select-click",
+                                ids: duplicates.map(({ id }) => id),
+                              },
+                            },
+                            "*"
+                          );
+                        }}
+                      >
+                        {error.type}: {error.name}
+                      </div>
+                      {duplicates.map(({ id, pathname }, idIndex) => (
+                        <div
+                          key={id}
+                          className={`item item-details item-details-clickable ${
+                            `${index}:${idIndex}` === selectedNode
+                              ? "item-details-selected"
+                              : "item-details-hover"
+                          }`}
+                          onClick={() => {
+                            setSelectedNode(`${index}:${idIndex}`);
+                            window.parent.postMessage(
+                              {
+                                pluginMessage: {
+                                  type: "select-click",
+                                  ids: [id],
+                                },
+                              },
+                              "*"
+                            );
+                          }}
+                        >
+                          <span className="item-detail-label">{id}</span>
+                          {pathname}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+              })}
+            </div>
+          </>
+        ) : null}
         <h3 className="section item header">Export Preview</h3>
         <div className="item preview-section">
           {exportableBytes.map((data, index) => {

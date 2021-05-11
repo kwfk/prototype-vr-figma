@@ -90,6 +90,11 @@ ul {
   box-shadow: inset 0 0 0 1px #18a0fb;
 }
 
+.item-detail-label {
+  color: #b3b3b3;
+  margin-right: 8px;
+}
+
 .preview-section {
   display: flex;
   flex: auto;

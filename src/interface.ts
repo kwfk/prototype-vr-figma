@@ -45,13 +45,14 @@ export type UnsupportedActionError = {
   type: "UNSUPPORTED ACTION: SMART_ANIMATE";
   id: string;
   name: string;
+  pathname: string;
   trigger: string;
 };
 
 export type DuplicateHotspotError = {
   type: "DUPLICATE_HOTSPOT";
   name: string;
-  ids: string[];
+  duplicates: { id: string; pathname: string }[];
 };
 
 export type ErrorNode = UnsupportedActionError | DuplicateHotspotError;
