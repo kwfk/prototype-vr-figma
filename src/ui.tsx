@@ -15,7 +15,7 @@ const App: React.FC = () => {
   const [errorNodes, setErrorNodes] = React.useState<ErrorNode[]>([]);
   const [projectName, setProjectName] = React.useState("");
   const [pageName, setPageName] = React.useState("");
-  const [selectedNode, setSelectedNode] = React.useState(-1);
+  const [selectedNode, setSelectedNode] = React.useState("");
 
   const [selectedFrames, setSelectedFrames] = React.useState<string[]>([]);
   textbox: HTMLInputElement;
@@ -103,18 +103,16 @@ const App: React.FC = () => {
 
       // Export frame images
       for (let data of exportableBytes) {
-        const { bytes, name, setting } = data;
+        const { id, bytes, name, setting } = data;
 
         const blob = blobify(bytes, setting.format);
 
         const extension = exportTypeToFileExtension(setting.format);
-        zip.file(`${name}${setting.suffix}${extension}`, blob, {
+        const filename = `${name}-${id}${setting.suffix}${extension}`;
+        zip.file(filename, blob, {
           base64: true,
         });
-        manifest.screenImages = [
-          ...manifest.screenImages,
-          `${name}${setting.suffix}${extension}`,
-        ];
+        manifest.screenImages = [...manifest.screenImages, filename];
       }
 
       // Export manifest JSON
@@ -152,13 +150,15 @@ const App: React.FC = () => {
             return (
               <div
                 className={`item-container ${
-                  index === selectedNode ? "item-container-selected" : null
+                  index.toString() === selectedNode
+                    ? "item-container-selected"
+                    : null
                 }`}
                 key={index}
               >
                 <div
                   onClick={() => {
-                    setSelectedNode(index);
+                    setSelectedNode(index.toString());
                     window.parent.postMessage(
                       { pluginMessage: { type: "error-click", ids: [id] } },
                       "*"
@@ -167,7 +167,7 @@ const App: React.FC = () => {
                 >
                   <div
                     className={`item item-title ${
-                      index === selectedNode
+                      index.toString() === selectedNode
                         ? "item-title-selected"
                         : "item-title-hover"
                     }`}
@@ -186,30 +186,45 @@ const App: React.FC = () => {
             return (
               <div
                 className={`item-container ${
-                  index === selectedNode ? "item-container-selected" : null
+                  index.toString() === selectedNode
+                    ? "item-container-selected"
+                    : null
                 }`}
                 key={index}
               >
-                <div
-                  onClick={() => {
-                    setSelectedNode(index);
-                    window.parent.postMessage(
-                      { pluginMessage: { type: "error-click", ids } },
-                      "*"
-                    );
-                  }}
-                >
+                <div>
                   <div
                     className={`item item-title ${
-                      index === selectedNode
+                      index.toString() === selectedNode
                         ? "item-title-selected"
                         : "item-title-hover"
                     }`}
+                    onClick={() => {
+                      setSelectedNode(index.toString());
+                      window.parent.postMessage(
+                        { pluginMessage: { type: "error-click", ids } },
+                        "*"
+                      );
+                    }}
                   >
                     {error.type}: {error.name}
                   </div>
-                  {ids.map((id) => (
-                    <div key={id} className="item item-details">
+                  {ids.map((id, idIndex) => (
+                    <div
+                      key={id}
+                      className={`item item-details item-details-clickable ${
+                        `${index}:${idIndex}` === selectedNode
+                          ? "item-details-selected"
+                          : "item-details-hover"
+                      }`}
+                      onClick={() => {
+                        setSelectedNode(`${index}:${idIndex}`);
+                        window.parent.postMessage(
+                          { pluginMessage: { type: "error-click", ids: [id] } },
+                          "*"
+                        );
+                      }}
+                    >
                       {id}
                     </div>
                   ))}

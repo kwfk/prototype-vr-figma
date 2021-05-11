@@ -49,12 +49,6 @@ ul {
   cursor: pointer;
 }
 
-.item-details {
-  padding-left: 32px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
-
 .item-container-selected {
   background-color: #edf5fa;
 }
@@ -65,7 +59,24 @@ ul {
 
 .item-title-hover:hover {
   box-shadow: inset 0 0 0 1px #18a0fb;
-  /* background-color: #f0f0f0; */
+}
+
+.item-details {
+  padding-left: 32px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.item-details-clickable {
+  cursor: pointer;
+}
+
+.item-details-selected {
+  background-color: #daebf7;
+}
+
+.item-details-hover:hover {
+  box-shadow: inset 0 0 0 1px #18a0fb;
 }
 
 .preview-container {
