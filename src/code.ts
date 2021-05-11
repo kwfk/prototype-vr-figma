@@ -132,7 +132,7 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
   };
 
   figma.showUI(__html__);
-  figma.ui.resize(328, 328);
+  figma.ui.resize(372, 328);
   figma.ui.postMessage({
     exportableBytes,
     exportJSON,
@@ -145,16 +145,16 @@ async function main(nodes: readonly SceneNode[]): Promise<string> {
     figma.ui.onmessage = (msg) => {
       const { type } = msg;
       if (type === "zip-success") resolve("Exported!");
-      if (type === "error-click") {
+      if (type === "select-click") {
         const ids: string[] = msg.ids;
-        const errorNodes = ids.map((id, index) => {
+        const nodes = ids.map((id) => {
           const node = figma.getNodeById(id);
           if (node.type !== "DOCUMENT" && node.type !== "PAGE") {
             return node;
           }
         });
-        figma.currentPage.selection = errorNodes;
-        figma.viewport.scrollAndZoomIntoView(errorNodes);
+        figma.currentPage.selection = nodes;
+        figma.viewport.scrollAndZoomIntoView(nodes);
       }
     };
   });

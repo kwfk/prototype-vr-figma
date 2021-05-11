@@ -25,6 +25,15 @@ ul {
   align-content: flex-start;
 }
 
+.header {
+  line-height: 32px;
+  height: 32px;
+  margin: 0;
+  background-color: #fff;
+  position: sticky;
+  width: 100%;
+}
+
 .item-container {
   display: flex;
   flex-direction: column;
@@ -38,6 +47,7 @@ ul {
 
 .item {
   padding-left: 16px;
+  padding-right: 16px;
 }
 
 .item-title {
@@ -79,11 +89,20 @@ ul {
   box-shadow: inset 0 0 0 1px #18a0fb;
 }
 
+.preview-section {
+  display: flex;
+  flex: auto;
+  overflow: auto;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+
 .preview-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin: 4px;
+  cursor: pointer;
 }
 
 .preview {
@@ -107,6 +126,12 @@ ul {
 
 .preview-selected {
   box-shadow: inset 0 0 0 1px #18a0fb;
+}
+
+.preview-text {
+  display: flex;
+  justify-content: center;
+  width: 100px;
 }
 
 .preview-text-selected {

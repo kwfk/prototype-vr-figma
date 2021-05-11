@@ -144,6 +144,7 @@ const App: React.FC = () => {
   return (
     <div id="app">
       <div id="content">
+        <h3 className={`item header`}>Warnings</h3>
         {errorNodes.map((error, index) => {
           if (error.type === "UNSUPPORTED ACTION: SMART_ANIMATE") {
             const { id, trigger } = error;
@@ -160,7 +161,7 @@ const App: React.FC = () => {
                   onClick={() => {
                     setSelectedNode(index.toString());
                     window.parent.postMessage(
-                      { pluginMessage: { type: "error-click", ids: [id] } },
+                      { pluginMessage: { type: "select-click", ids: [id] } },
                       "*"
                     );
                   }}
@@ -202,7 +203,7 @@ const App: React.FC = () => {
                     onClick={() => {
                       setSelectedNode(index.toString());
                       window.parent.postMessage(
-                        { pluginMessage: { type: "error-click", ids } },
+                        { pluginMessage: { type: "select-click", ids } },
                         "*"
                       );
                     }}
@@ -220,7 +221,9 @@ const App: React.FC = () => {
                       onClick={() => {
                         setSelectedNode(`${index}:${idIndex}`);
                         window.parent.postMessage(
-                          { pluginMessage: { type: "error-click", ids: [id] } },
+                          {
+                            pluginMessage: { type: "select-click", ids: [id] },
+                          },
                           "*"
                         );
                       }}
@@ -233,22 +236,49 @@ const App: React.FC = () => {
             );
           }
         })}
-        {/* {exportableBytes.map((data) => {
-          const { id, bytes, name, setting } = data;
-          const blob = blobify(bytes, setting.format);
-          const objURL = URL.createObjectURL(blob);
-          return (
-            <div className="preview-container" key={id}>
-              <div className={`preview`}>
+        <h3 className="item header">Export Preview</h3>
+        <div className="item preview-section">
+          {exportableBytes.map((data, index) => {
+            const { id, bytes, name, setting } = data;
+            const blob = blobify(bytes, setting.format);
+            const objURL = URL.createObjectURL(blob);
+            return (
+              <div
+                className="preview-container"
+                key={id}
+                onClick={() => {
+                  setSelectedNode(`preview:${index}`);
+                  window.parent.postMessage(
+                    { pluginMessage: { type: "select-click", ids: [id] } },
+                    "*"
+                  );
+                }}
+              >
                 <div
-                  className="preview-img"
-                  style={{ backgroundImage: `url(${objURL})` }}
-                />
+                  className={`preview ${
+                    `preview:${index}` === selectedNode
+                      ? "preview-selected"
+                      : null
+                  }`}
+                >
+                  <div
+                    className="preview-img"
+                    style={{ backgroundImage: `url(${objURL})` }}
+                  />
+                </div>
+                <div
+                  className={`preview-text ${
+                    `preview:${index}` === selectedNode
+                      ? "preview-text-selected"
+                      : null
+                  }`}
+                >
+                  {name}
+                </div>
               </div>
-              <div className="preview-text">{name}</div>
-            </div>
-          );
-        })} */}
+            );
+          })}
+        </div>
       </div>
       <footer>
         <button id="create" onClick={handleExport}>
