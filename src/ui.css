@@ -75,6 +75,7 @@ ul {
   padding-left: 32px;
   padding-top: 8px;
   padding-bottom: 8px;
+  cursor: default;
 }
 
 .item-details-clickable {
